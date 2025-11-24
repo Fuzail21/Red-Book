@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2020 PH - Document Library</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .logo {
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        /* Dropdown Styles */
+        .dropdown-container {
+            margin-bottom: 30px;
+        }
+
+        .dropdown-label {
+            font-size: 16px;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            font-size: 16px;
+            border: 2px solid #007bff;
+            border-radius: 5px;
+            background-color: white;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        select:hover {
+            border-color: #0056b3;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #0056b3;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+        }
+
+        /* Category Buttons (for SDS Book) */
+        .category-buttons {
+            display: none;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .category-buttons.active {
+            display: flex;
+        }
+
+        .category-btn {
+            flex: 1;
+            min-width: 150px;
+            padding: 15px 25px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .category-btn:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .category-btn.active {
+            background-color: #0056b3;
+        }
+
+        /* PDF List */
+        .pdf-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            text-align: left;
+        }
+
+        .pdf-list li {
+            border-bottom: 1px solid #ddd;
+            padding: 0;
+        }
+
+        .pdf-list li:last-child {
+            border-bottom: none;
+        }
+
+        .pdf-btn {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            background-color: white;
+            color: #007bff;
+            border: none;
+            border-radius: 5px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            text-align: left;
+        }
+
+        .pdf-btn:hover {
+            background-color: #f0f8ff;
+            color: #0056b3;
+        }
+
+        .pdf-icon {
+            margin-right: 10px;
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .pdf-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: #007bff;
+            transition: fill 0.3s ease;
+        }
+
+        .pdf-btn:hover .pdf-icon svg {
+            fill: #0056b3;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 18px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-size: 16px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .category-btn {
+                min-width: 100%;
+            }
+
+            .pdf-btn {
+                font-size: 14px;
+                padding: 10px 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="logo">
+            <img src="img/20-20-Logo-Color.png" alt="2020 PH Logo" style="max-width: 200px;">
+        </div>
+        <h1>2020 PH Document Library</h1>
+
+        <!-- Dropdown Selector -->
+        <div class="dropdown-container">
+            <label class="dropdown-label" for="book-selector">Select Document Category:</label>
+            <select id="book-selector">
+                <option value="">-- Select a Book --</option>
+                <option value="red-book">RED BOOK</option>
+                <option value="sds-book">SDS BOOK</option>
+            </select>
+        </div>
+
+        <!-- Category Buttons (for SDS Book) -->
+        <div id="category-buttons" class="category-buttons">
+            <button class="category-btn" data-category="liquids">Liquids</button>
+            <button class="category-btn" data-category="solids">Solids</button>
+            <button class="category-btn" data-category="gases">Gases</button>
+        </div>
+
+        <!-- PDF List Container -->
+        <ul id="pdf-list" class="pdf-list"></ul>
+    </div>
+
+    <script>
+        // PDF Data Structure - organized by category
+        const pdfData = {
+            redBook: {
+                folder: 'RED BOOK',
+                files: [
+                    '1. 2020 Plumbing Safety Program.pdf',
+                    '2020_Code of Safe Practices 2025.pdf',
+                    '2020_Confined Space Program.pdf',
+                    '2020_Control of Hazardous Energy Lock-Out Tag-Out Program.pdf',
+                    '2020_Disciplinary Action English-Spanish.pdf',
+                    '2020_Emergency Action Plan.pdf',
+                    '2020_Employee Handbook.pdf',
+                    '2020_Employee Log Sheet - English - Spanish.pdf',
+                    '2020_Excavation Safety Program.pdf',
+                    '2020_Fall Protection Program.pdf',
+                    '2020_Fire Prevention Plan.pdf',
+                    '2020_First Aid Procedures.pdf',
+                    '2020_Hazard Communication  Program.pdf',
+                    '2020_Heat Illness Prevention Program.pdf',
+                    '2020_Injury Accident & Injury Report.pdf',
+                    '2020_Injury Accident Reporting Procedures.pdf',
+                    '2020_Labor OSHA Safety Notices.pdf',
+                    '2020_Medical Facilities.pdf',
+                    '2020_Personal Protective Equipment Program.pdf',
+                    '2020_Quality Statement English & Spanish.pdf',
+                    '2020_Respiratory Protection Voluntary Use-English.pdf',
+                    '2020_Respiratory Protection Voluntary Use-Spanish.pdf',
+                    '2020_Silica Exposure Control Plan.pdf',
+                    '2020_Storm Water Pollution Prevention Plan.pdf',
+                    '2020_Timecard Field English.pdf',
+                    '2020_Timecard Field Spanish.pdf',
+                    'Red Book Table of Contents.pdf'
+                ]
+            },
+            sdsBook: {
+                liquids: {
+                    folder: 'SDS Books/Section 1- Liquids',
+                    files: [
+                        '1- Aervoe Marking Paint-Aerosol.pdf',
+                        '2- Oatey Clear Cutting Oil.pdf',
+                        '3-Compressor Oil.pdf',
+                        '4- Hercules Dark Cutting Oil.pdf',
+                        '5- Kwik Seal-Clear.pdf',
+                        '6- Kwik Seal- All Colors.pdf',
+                        '7- Window, Door & Siding Silicone Sealant-White.pdf',
+                        '8- Window, Door & Siding 100% Silicone Rubber Sealeant-Clear.pdf',
+                        '9- KRYLON Marking Paint- Brilliant Red.pdf',
+                        '10- KRYLON Marking Paint- Utility White.pdf',
+                        '11- Mainline Low VOC Solvent for PVC.pdf',
+                        '12- Mainline Low VOC Priemer for PVC.pdf',
+                        '13- WD-40 Aerosol.pdf',
+                        '14- WELD-ON AA66 Vinyl Cement.pdf',
+                        '15- Chlorinated Polyvinyl Chloride-Solvent.pdf',
+                        '16- NIBCO FP-100 Red Cement CPVC Plastic.pdf',
+                        '17- Oatey ABS Medium Black Cement.pdf',
+                        '18- Oatey All Purpose Milky Clear Cement.pdf',
+                        '19- Oatey Blue Lava Hot PVC Cement.pdf',
+                        '20- Oatey CPVC Flowguard One-Step Yellow Cement.pdf',
+                        '21- Oatey CPVC Heavy Duty Orange.pdf',
+                        '22- Oatey CPVC Heavy Duty Orange Lava Cement.pdf',
+                        '23- Oatey CPVC Medium Orange Cement.pdf',
+                        '24- Oatey Purple Primer NSF for PVC & CPVC.pdf',
+                        '25- Oatey Purple Primer Large Diameter Pipe.pdf',
+                        '26- Transition Cement.pdf',
+                        '27- Rain-R Shine Blue PVC Cement.pdf',
+                        '28- WELD-ON Plumbing Purple Low for PVC & CPVC Plastic Pipe.pdf',
+                        '29- WELD-ON P-70 Low VOC Primer for PVC & CPVC Plastic Pipe.pdf',
+                        '30- WELD-ON Flowguard Low VOC Cement for CPVC.pdf',
+                        '31- WELD-ON DUIT 413 Low VOC Plastic Pipe Cement for Electrical.pdf',
+                        '32- WELD-ON 714 Low VOC Cement CPVC Plastic Pipe.pdf',
+                        '33- WELD-ON 717 Low VOC Cements PVC Plastic Pipe.pdf',
+                        '34- WELD-ON 711 Low VOC PVC Plastic Pipe Cements.pdf',
+                        '35- WELD-ON 719 Low VOC PVC Plastic Pipe Cements.pdf',
+                        '36- WELD-ON 721 LOW VOC Cement PVC Plastic Pipes.pdf',
+                        '37- WELD-ON 773 Low VOC Pipe Cemenr ABS Pipe.pdf',
+                        '38- WELD-ON 790 Low VOC Multi-Purpose Plastic Pipe Cement.pdf',
+                        '39- WELD-ON 794 Low PVC to ABS Plastic Pipe Transition Cement.pdf',
+                        'SDS Section 1 Combined.pdf'
+                    ]
+                },
+                solids: {
+                    folder: 'SDS Books/Section 2- Solids',
+                    files: [
+                        '1- 3M Tapes.pdf',
+                        '2- Casting Plaster NO.1-20 Minute.pdf',
+                        '3- Copper Tubing (all sizes & wall thickness).pdf',
+                        '4- CPVC Pipe & Fittings.pdf',
+                        '5- PVC Pipe & Fittings.pdf',
+                        '6-Christy\'s Prime It.pdf',
+                        '7- EVERFLUX.pdf',
+                        '8- 3M FireBarrier Sealant IC 15 WB+.pdf',
+                        '9- Flo-Safe Wire & Bar Solder.pdf',
+                        '10- Hercules Plumbers Firestop Sealant.pdf',
+                        '11- Hercules Staput.pdf',
+                        '12- Henry 900 Construction & Flashing Sealant.pdf',
+                        '13- Handi-Foam HC Gun Foam.pdf',
+                        '14- Hilti CF AS CJP.pdf',
+                        '15- Hilti HIT-HY 150 MAX.pdf',
+                        '16- IRWIN Chalk-Green.pdf',
+                        '17- IRWIN Chalk- Midnight black, Permanent Staining.pdf',
+                        '18- IRWIN Chalk- Indigo Blue, Permanent Staining.pdf',
+                        '19- IRWIN Chalk- Red Permanent.pdf',
+                        '20- IRWIN Chalk- Yellow Hi-Vis.pdf',
+                        '21- Hercules Megaloc.pdf',
+                        '22- WELD-ON 505 Key Tite Low VOC Pip Joint.pdf',
+                        '23- Oatey Great White Pipe Joint Compound.pdf',
+                        '24- Oatey Plumber\'s Putty.pdf',
+                        '25- Quikrete.pdf',
+                        '26- RAM-NEK Joint Sealant.pdf',
+                        '27- Rosin Core Lead-Free Solder.pdf',
+                        '28- Silver-Copper Tin Brazing Alloys.pdf',
+                        '29- Sikaflex Construction Sealant.pdf',
+                        '30- Slic-Tite Paste with PTFE.pdf',
+                        '31- LCI Intumescent Sealant.pdf',
+                        'SDS Section 2 Combined.pdf'
+                    ]
+                },
+                gases: {
+                    folder: 'SDS Books/Section 3- Gases',
+                    files: [
+                        '1- Acetylene.pdf',
+                        '2- Carbon Dioxide.pdf',
+                        '3- MAP-Pro Premium Hand Torch Fuel.pdf',
+                        '4- Nitrogen.pdf',
+                        '5- Oxygen.pdf',
+                        '6- Propane.pdf',
+                        'SDS Section 3 Combined.pdf'
+                    ]
+                }
+            }
+        };
+
+        // DOM Elements
+        const bookSelector = document.getElementById('book-selector');
+        const categoryButtons = document.getElementById('category-buttons');
+        const pdfList = document.getElementById('pdf-list');
+        const categoryBtns = document.querySelectorAll('.category-btn');
+
+        // State
+        let currentBook = '';
+        let currentCategory = '';
+
+        // Event Listeners
+        bookSelector.addEventListener('change', handleBookChange);
+        categoryBtns.forEach(btn => {
+            btn.addEventListener('click', handleCategoryClick);
+        });
+
+        // Handle book selection change
+        function handleBookChange(e) {
+            const selectedBook = e.target.value;
+            currentBook = selectedBook;
+            currentCategory = '';
+
+            // Reset category buttons
+            categoryBtns.forEach(btn => btn.classList.remove('active'));
+
+            if (selectedBook === 'red-book') {
+                categoryButtons.classList.remove('active');
+                renderPDFList(pdfData.redBook.files, pdfData.redBook.folder);
+            } else if (selectedBook === 'sds-book') {
+                categoryButtons.classList.add('active');
+                pdfList.innerHTML = '<li class="empty-state">Please select a category above (Liquids, Solids, or Gases)</li>';
+            } else {
+                categoryButtons.classList.remove('active');
+                pdfList.innerHTML = '';
+            }
+        }
+
+        // Handle category button click
+        function handleCategoryClick(e) {
+            const category = e.target.dataset.category;
+            currentCategory = category;
+
+            // Update active state
+            categoryBtns.forEach(btn => btn.classList.remove('active'));
+            e.target.classList.add('active');
+
+            // Render PDFs for selected category
+            const categoryData = pdfData.sdsBook[category];
+            renderPDFList(categoryData.files, categoryData.folder);
+        }
+
+        // Render PDF list
+        function renderPDFList(files, folder) {
+            pdfList.innerHTML = '';
+
+            if (!files || files.length === 0) {
+                pdfList.innerHTML = '<li class="empty-state">No documents available</li>';
+                return;
+            }
+
+            files.forEach(filename => {
+                const li = document.createElement('li');
+                const button = document.createElement('button');
+                button.className = 'pdf-btn';
+                button.dataset.url = `${folder}/${filename}`;
+
+                button.innerHTML = `
+                    <span class="pdf-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M13 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V9l-7-7zm3 16h-2v-2h-4v2H8v-4h2v-2H8v-4h4V9h2v2h4v4h-2v2h2v4zm-4-6h2v-2h-2v2zm2 4v-2h-2v2h2z"/>
+                        </svg>
+                    </span>
+                    ${cleanFilename(filename)}
+                `;
+
+                button.addEventListener('click', () => openPDF(button.dataset.url));
+                li.appendChild(button);
+                pdfList.appendChild(li);
+            });
+        }
+
+        // Clean filename for display (remove numbering and extension)
+        function cleanFilename(filename) {
+            return filename
+                .replace(/^\d+[-\s]*/, '') // Remove leading numbers and dashes
+                .replace(/\.pdf$/i, '');   // Remove .pdf extension
+        }
+
+        // Open PDF in viewer
+        function openPDF(pdfUrl) {
+            // Store PDF URL in sessionStorage with correct relative path
+            // Since viewer is in pdf_viewer-master/, we need to go up one level
+            sessionStorage.setItem('pdfUrl', '../' + pdfUrl);
+
+            // Redirect to PDF viewer
+            window.location.href = 'pdf_viewer-master/index.html';
+        }
+    </script>
+</body>
+
+</html>
